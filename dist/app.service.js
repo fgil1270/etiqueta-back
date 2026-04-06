@@ -18,16 +18,19 @@ const execFileAsync = (0, util_1.promisify)(child_process_1.execFile);
 const ZEBRA_PRINTER_NAME = process.env.ZEBRA_PRINTER_NAME ?? 'Zebra';
 const IMAGE_EXTENSIONS = ['.png', '.jpg', '.jpeg', '.bmp'];
 const LABEL_DPI = 300;
-const LABEL_WIDTH_IN = Number(process.env.LABEL_WIDTH_IN ?? 3.1);
+const LABEL_WIDTH_IN = Number(process.env.LABEL_WIDTH_IN ?? 3.2);
 const LABEL_HEIGHT_IN = Number(process.env.LABEL_HEIGHT_IN ?? 1.4715);
 const LABEL_WIDTH_PX = Math.round(LABEL_WIDTH_IN * LABEL_DPI);
 const LABEL_HEIGHT_PX = Math.round(LABEL_HEIGHT_IN * LABEL_DPI);
 const LABEL_WIDTH_HI = Math.round(LABEL_WIDTH_IN * 100);
 const LABEL_HEIGHT_HI = Math.round(LABEL_HEIGHT_IN * 100);
-const PRINT_OFFSET_X_MM = Number(process.env.PRINT_OFFSET_X_MM ?? 8);
+const PRINT_OFFSET_X_MM = Number(process.env.PRINT_OFFSET_X_MM ?? 4);
 const PRINT_OFFSET_Y_MM = Number(process.env.PRINT_OFFSET_Y_MM ?? 4);
 const PRINT_OFFSET_X_HI = Math.round((PRINT_OFFSET_X_MM / 25.4) * 100);
 const PRINT_OFFSET_Y_HI = Math.round((PRINT_OFFSET_Y_MM / 25.4) * 100);
+const PRINT_OFFSET_X_PX = Math.round((PRINT_OFFSET_X_MM / 25.4) * LABEL_DPI);
+const PRINT_OFFSET_Y_PX = Math.round((PRINT_OFFSET_Y_MM / 25.4) * LABEL_DPI);
+const PRINT_COPIES = Math.max(1, Number(process.env.PRINT_COPIES ?? 1));
 const ZPL_DARKNESS = Math.min(30, Math.max(0, Number(process.env.ZPL_DARKNESS ?? 15)));
 const ZPL_PRINT_SPEED = Math.min(14, Math.max(1, Number(process.env.ZPL_PRINT_SPEED ?? 3)));
 let AppService = AppService_1 = class AppService {
@@ -35,12 +38,9 @@ let AppService = AppService_1 = class AppService {
         this.logger = new common_1.Logger(AppService_1.name);
         this.logFilePath = (0, path_1.resolve)(process.cwd(), 'logs', 'etiqueta.log');
     }
-    getHello() {
-        return 'Hello World!';
-    }
-    async createEtiqueta(valor) {
-        this.writeLog(`Solicitud de etiqueta recibida. valor=${valor}`);
-        const imgFilename = `LV432820.png`;
+    async createEtiqueta(valor, modelo) {
+        this.writeLog(`Solicitud de etiqueta recibida. valor=${valor}, modelo=${modelo}`);
+        const imgFilename = modelo + '.png';
         const imgsDirectory = (0, path_1.resolve)(process.cwd(), 'C://imgs');
         const imagePath = this.resolveImagePath(`${imgsDirectory}/${imgFilename}`);
         if (!imagePath) {
@@ -74,7 +74,7 @@ let AppService = AppService_1 = class AppService {
             .withMetadata({ density: LABEL_DPI })
             .png({ compressionLevel: 0 })
             .toFile(tempImagePath);
-        await this.printImage(tempImagePath);
+        await this.printImageZpl(tempImagePath);
         return {
             mensaje: 'Etiqueta enviada a impresion correctamente',
             valor,
@@ -203,16 +203,17 @@ let AppService = AppService_1 = class AppService {
         (0, fs_1.appendFileSync)(this.logFilePath, `[${timestamp}] ${message}\n`, { encoding: 'utf8' });
     }
     async printImageZpl(imagePath) {
-        const widthDots = LABEL_WIDTH_PX;
-        const heightDots = LABEL_HEIGHT_PX;
-        const bytesPerRow = Math.ceil(widthDots / 8);
-        const totalBytes = bytesPerRow * heightDots;
+        const labelWidthDots = LABEL_WIDTH_PX;
+        const labelHeightDots = LABEL_HEIGHT_PX;
         const { data, info } = await sharp(imagePath)
             .flatten({ background: { r: 255, g: 255, b: 255 } })
-            .resize(widthDots, heightDots, { fit: 'fill', kernel: 'lanczos3' })
             .grayscale()
             .raw()
             .toBuffer({ resolveWithObject: true });
+        const widthDots = info.width;
+        const heightDots = info.height;
+        const bytesPerRow = Math.ceil(widthDots / 8);
+        const totalBytes = bytesPerRow * heightDots;
         const ch = info.channels;
         let gfData = '';
         for (let y = 0; y < heightDots; y++) {
@@ -227,7 +228,7 @@ let AppService = AppService_1 = class AppService {
                 gfData += byte.toString(16).padStart(2, '0').toUpperCase();
             }
         }
-        const zpl = `^XA^PW${widthDots}^LL${heightDots}^FO0,0^GFA,${totalBytes},${totalBytes},${bytesPerRow},${gfData}^FS^XZ`;
+        const zpl = `^XA^PW${labelWidthDots}^LL${labelHeightDots}^FO${PRINT_OFFSET_X_PX},${PRINT_OFFSET_Y_PX}^GFA,${totalBytes},${totalBytes},${bytesPerRow},${gfData}^FS^PQ${PRINT_COPIES}^XZ`;
         const zplPath = imagePath.replace(/\.png$/i, '.zpl');
         (0, fs_1.writeFileSync)(zplPath, zpl, 'ascii');
         const escapedPrinterName = ZEBRA_PRINTER_NAME.replace(/'/g, "''");

@@ -13,17 +13,20 @@ const IMAGE_EXTENSIONS = ['.png', '.jpg', '.jpeg', '.bmp'];
 const LABEL_DPI = 300
 //const LABEL_WIDTH_IN = Number(process.env.LABEL_WIDTH_IN ?? 3.259);
 //const LABEL_HEIGHT_IN = Number(process.env.LABEL_HEIGHT_IN ?? 1.6);
-const LABEL_WIDTH_IN = Number(process.env.LABEL_WIDTH_IN ?? 3.1);
+const LABEL_WIDTH_IN = Number(process.env.LABEL_WIDTH_IN ?? 3.2); //define el area de imprecion
 const LABEL_HEIGHT_IN = Number(process.env.LABEL_HEIGHT_IN ?? 1.4715);
 const LABEL_WIDTH_PX = Math.round(LABEL_WIDTH_IN * LABEL_DPI);
 const LABEL_HEIGHT_PX = Math.round(LABEL_HEIGHT_IN * LABEL_DPI);
 const LABEL_WIDTH_HI = Math.round(LABEL_WIDTH_IN * 100);
 const LABEL_HEIGHT_HI = Math.round(LABEL_HEIGHT_IN * 100);
 // Calibración posición de impresión: mm → centésimas de pulgada (unidad GDI+)
-const PRINT_OFFSET_X_MM = Number(process.env.PRINT_OFFSET_X_MM ?? 8);
+const PRINT_OFFSET_X_MM = Number(process.env.PRINT_OFFSET_X_MM ?? 4);
 const PRINT_OFFSET_Y_MM = Number(process.env.PRINT_OFFSET_Y_MM ?? 4);
 const PRINT_OFFSET_X_HI = Math.round((PRINT_OFFSET_X_MM / 25.4) * 100);
 const PRINT_OFFSET_Y_HI = Math.round((PRINT_OFFSET_Y_MM / 25.4) * 100);
+const PRINT_OFFSET_X_PX = Math.round((PRINT_OFFSET_X_MM / 25.4) * LABEL_DPI);
+const PRINT_OFFSET_Y_PX = Math.round((PRINT_OFFSET_Y_MM / 25.4) * LABEL_DPI);
+const PRINT_COPIES = Math.max(1, Number(process.env.PRINT_COPIES ?? 1)); // Número de copias a imprimir por etiqueta
 // Configuración Zebra: oscuridad (0-30) y velocidad de impresión en pulgadas/seg (1-14)
 const ZPL_DARKNESS = Math.min(30, Math.max(0, Number(process.env.ZPL_DARKNESS ?? 15)));
 const ZPL_PRINT_SPEED = Math.min(14, Math.max(1, Number(process.env.ZPL_PRINT_SPEED ?? 3)));
@@ -33,15 +36,15 @@ export class AppService {
     private readonly logger = new Logger(AppService.name);
     private readonly logFilePath = resolve(process.cwd(), 'logs', 'etiqueta.log');
 
-    async createEtiqueta(valor: string): Promise<{
+    async createEtiqueta(valor: string, modelo: string): Promise<{
         mensaje: string;
         valor: string;
         printerConnected: boolean;
         printed: boolean;
     }> {
-        this.writeLog(`Solicitud de etiqueta recibida. valor=${valor}`);
+        this.writeLog(`Solicitud de etiqueta recibida. valor=${valor}, modelo=${modelo}`);
 
-        const imgFilename = `LV432820.png`;
+        const imgFilename = modelo + '.png';//`LV432820.png`;
         const imgsDirectory = resolve(process.cwd(), 'C://imgs');
 
         //se obtiene la ruta de la imagen, si no existe se retorna un mensaje de error
@@ -103,8 +106,8 @@ export class AppService {
             .toFile(tempImagePath);
 
 
-        await this.printImage(tempImagePath);
-        //await this.printImageZpl(tempImagePath);
+        //await this.printImage(tempImagePath);
+        await this.printImageZpl(tempImagePath);
 
         return {
             mensaje: 'Etiqueta enviada a impresion correctamente',
@@ -259,19 +262,22 @@ export class AppService {
 
     // Función para enviar la imagen a la impresora Zebra en formato ZPL nativo (sin GDI+, más rápido)
     private async printImageZpl(imagePath: string): Promise<void> {
-        const widthDots = LABEL_WIDTH_PX;
-        const heightDots = LABEL_HEIGHT_PX;
-        const bytesPerRow = Math.ceil(widthDots / 8);
-        const totalBytes = bytesPerRow * heightDots;
+        const labelWidthDots = LABEL_WIDTH_PX;
+        const labelHeightDots = LABEL_HEIGHT_PX;
 
         // Convertir PNG a escala de grises 1-bit para comando ^GFA de ZPL
         // .flatten() elimina canal alfa (si existe) antes de convertir a gris
         const { data, info } = await sharp(imagePath)
             .flatten({ background: { r: 255, g: 255, b: 255 } })
-            .resize(widthDots, heightDots, { fit: 'fill', kernel: 'lanczos3' })
             .grayscale()
             .raw()
             .toBuffer({ resolveWithObject: true });
+
+        // Usar el tamaño real de la imagen
+        const widthDots = info.width;
+        const heightDots = info.height;
+        const bytesPerRow = Math.ceil(widthDots / 8);
+        const totalBytes = bytesPerRow * heightDots;
 
         // info.channels = número real de canales (1 tras grayscale+flatten)
         const ch = info.channels;
@@ -292,7 +298,8 @@ export class AppService {
         }
 
         // Construir documento ZPL con tamaño de etiqueta explícito
-        const zpl = `^XA^PW${widthDots}^LL${heightDots}^FO0,0^GFA,${totalBytes},${totalBytes},${bytesPerRow},${gfData}^FS^XZ`;
+        //const zpl = `^XA^PW${widthDots}^LL${heightDots}^FO${PRINT_OFFSET_X_PX},${PRINT_OFFSET_Y_PX}^GFA,${totalBytes},${totalBytes},${bytesPerRow},${gfData}^FS^XZ`;
+        const zpl = `^XA^PW${labelWidthDots}^LL${labelHeightDots}^FO${PRINT_OFFSET_X_PX},${PRINT_OFFSET_Y_PX}^GFA,${totalBytes},${totalBytes},${bytesPerRow},${gfData}^FS^PQ${PRINT_COPIES}^XZ`;
 
         // Guardar ZPL en archivo temporal junto a la imagen
         const zplPath = imagePath.replace(/\.png$/i, '.zpl');

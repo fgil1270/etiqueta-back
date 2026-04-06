@@ -1,100 +1,34 @@
-[2026-03-12T22:40:02.346Z] Solicitud de etiqueta recibida. valor=7426114
-[2026-03-12T22:40:09.348Z] Diagnostico impresora: READY | NAME=Zebra | PORT=USB001 | STATUS=Normal | WMI_WORKOFFLINE=False
-[2026-03-12T22:40:09.405Z] Imagen temporal generada: C:\imgs\temp-schneider\etiqueta_1773355209381.png
-[2026-03-12T22:43:54.504Z] Solicitud de etiqueta recibida. valor=7426114
-[2026-03-12T22:43:57.040Z] Impresora 'Zebra' encontrada pero está offline.
-[2026-03-12T22:43:57.042Z] ERROR: impresora no disponible. nombre=Zebra
-[2026-03-13T17:35:48.934Z] Solicitud de etiqueta recibida. valor=7426115
-[2026-03-13T17:35:53.131Z] Impresora 'Zebra' encontrada pero está offline.
-[2026-03-13T17:35:53.133Z] ERROR: impresora no disponible. nombre=Zebra
-[2026-03-18T15:03:09.293Z] Solicitud de etiqueta recibida. valor=7426123
-[2026-03-18T15:03:12.833Z] Impresora 'Zebra' encontrada pero está offline.
-[2026-03-18T15:03:12.833Z] ERROR: impresora no disponible. nombre=Zebra
-[2026-03-18T15:03:48.807Z] Solicitud de etiqueta recibida. valor=7426123
-[2026-03-18T18:54:35.243Z] Solicitud de etiqueta recibida. valor=7426123
-[2026-03-18T19:03:00.136Z] Solicitud de etiqueta recibida. valor=7426123
-[2026-03-18T19:05:38.471Z] Solicitud de etiqueta recibida. valor=7426123
-[2026-03-18T19:08:03.638Z] Solicitud de etiqueta recibida. valor=7426123
-[2026-03-18T19:14:18.404Z] Solicitud de etiqueta recibida. valor=7426123
-[2026-03-18T19:19:20.338Z] Solicitud de etiqueta recibida. valor=7426123
-[2026-03-18T19:19:57.756Z] Solicitud de etiqueta recibida. valor=7426123
-[2026-03-18T19:21:55.904Z] Solicitud de etiqueta recibida. valor=7426123
-[2026-03-18T19:23:33.526Z] Solicitud de etiqueta recibida. valor=7426123
-[2026-03-18T20:35:49.283Z] Solicitud de etiqueta recibida. valor=7426123
-[2026-03-18T20:38:10.920Z] Solicitud de etiqueta recibida. valor=7426123
-[2026-03-18T20:40:19.587Z] Solicitud de etiqueta recibida. valor=7426123
-[2026-03-18T20:42:14.612Z] Solicitud de etiqueta recibida. valor=7426123
-[2026-03-18T21:16:50.161Z] Solicitud de etiqueta recibida. valor=7426123
-[2026-03-18T21:17:53.116Z] Solicitud de etiqueta recibida. valor=7426123
-[2026-03-18T21:19:12.045Z] Solicitud de etiqueta recibida. valor=7426123
-[2026-03-18T21:21:10.420Z] Solicitud de etiqueta recibida. valor=7426123
-[2026-03-18T21:21:11.600Z] Solicitud de etiqueta recibida. valor=7426123
-[2026-03-18T21:25:31.991Z] Solicitud de etiqueta recibida. valor=7426123
-[2026-03-18T21:26:38.765Z] Solicitud de etiqueta recibida. valor=7426123
-[2026-03-18T21:27:18.455Z] Solicitud de etiqueta recibida. valor=7426123
-[2026-03-18T21:30:53.722Z] Solicitud de etiqueta recibida. valor=7426123
-[2026-03-18T21:34:17.248Z] Solicitud de etiqueta recibida. valor=7426123
-[2026-03-18T21:34:59.904Z] Solicitud de etiqueta recibida. valor=7426123
-[2026-03-18T21:35:21.092Z] Solicitud de etiqueta recibida. valor=7426123
-[2026-03-18T21:35:48.418Z] Solicitud de etiqueta recibida. valor=7426123
-[2026-03-18T21:36:14.158Z] Solicitud de etiqueta recibida. valor=7426123
-[2026-03-18T21:39:26.307Z] Solicitud de etiqueta recibida. valor=7426123
-[2026-03-18T21:40:10.545Z] Solicitud de etiqueta recibida. valor=7426123
-[2026-03-19T14:41:06.731Z] Solicitud de etiqueta recibida. valor=7426124
-[2026-03-19T14:45:30.425Z] Solicitud de etiqueta recibida. valor=7426124
-[2026-03-19T14:47:06.815Z] Solicitud de etiqueta recibida. valor=7426124
-[2026-03-19T14:48:41.179Z] Solicitud de etiqueta recibida. valor=7426124
-[2026-03-19T14:50:00.322Z] Solicitud de etiqueta recibida. valor=7426124
-[2026-03-19T14:50:36.360Z] Solicitud de etiqueta recibida. valor=7426124
-[2026-03-19T15:04:16.105Z] Solicitud de etiqueta recibida. valor=7426124
-[2026-03-19T15:04:17.906Z] Impresora 'Zebra' encontrada pero está offline.
-[2026-03-19T15:04:17.908Z] ERROR: impresora no disponible. nombre=Zebra
-[2026-03-19T15:04:42.810Z] Solicitud de etiqueta recibida. valor=7426124
-[2026-03-19T15:52:35.872Z] Solicitud de etiqueta recibida. valor=7426124
-[2026-03-19T15:54:04.295Z] Solicitud de etiqueta recibida. valor=7426124
-[2026-03-19T15:55:47.193Z] Solicitud de etiqueta recibida. valor=7426124
-[2026-03-19T15:57:08.521Z] Solicitud de etiqueta recibida. valor=7426124
-[2026-03-19T15:58:08.060Z] Solicitud de etiqueta recibida. valor=7426124
-[2026-03-19T15:59:09.482Z] Solicitud de etiqueta recibida. valor=7426124
-[2026-03-19T15:59:22.023Z] Solicitud de etiqueta recibida. valor=7426124
-[2026-03-19T15:59:29.869Z] Solicitud de etiqueta recibida. valor=7426124
-[2026-03-19T16:00:23.219Z] Solicitud de etiqueta recibida. valor=7426124
-[2026-03-19T16:01:20.604Z] Solicitud de etiqueta recibida. valor=7426124
-[2026-03-19T16:02:10.101Z] Solicitud de etiqueta recibida. valor=7426124
-[2026-03-19T16:03:14.048Z] Solicitud de etiqueta recibida. valor=7426124
-[2026-03-19T16:03:48.823Z] Solicitud de etiqueta recibida. valor=7426124
-[2026-03-19T16:04:39.180Z] Solicitud de etiqueta recibida. valor=7426124
-[2026-03-19T16:05:10.479Z] Solicitud de etiqueta recibida. valor=7426124
-[2026-03-19T16:11:30.320Z] Solicitud de etiqueta recibida. valor=7426124
-[2026-03-19T16:11:44.779Z] Solicitud de etiqueta recibida. valor=7426124
-[2026-03-19T16:11:52.882Z] Solicitud de etiqueta recibida. valor=7426124
-[2026-03-19T16:12:00.025Z] Solicitud de etiqueta recibida. valor=7426124
-[2026-03-19T16:13:39.301Z] Solicitud de etiqueta recibida. valor=7426124
-[2026-03-19T16:15:12.814Z] Solicitud de etiqueta recibida. valor=7426124
-[2026-03-19T16:25:34.806Z] Solicitud de etiqueta recibida. valor=7426124
-[2026-03-19T16:27:06.653Z] Solicitud de etiqueta recibida. valor=7426124
-[2026-03-19T16:27:30.101Z] Solicitud de etiqueta recibida. valor=7426124
-[2026-03-19T16:32:05.243Z] Solicitud de etiqueta recibida. valor=7426124
-[2026-03-19T16:50:14.777Z] Solicitud de etiqueta recibida. valor=7426124
-[2026-03-19T16:50:40.734Z] Solicitud de etiqueta recibida. valor=7426124
-[2026-03-19T16:51:38.558Z] Solicitud de etiqueta recibida. valor=7426124
-[2026-03-19T16:56:48.185Z] Solicitud de etiqueta recibida. valor=7426124
-[2026-03-19T16:56:53.445Z] Impresora 'Zebra' encontrada pero está offline.
-[2026-03-19T16:56:53.446Z] ERROR: impresora no disponible. nombre=Zebra
-[2026-03-19T17:45:04.493Z] Solicitud de etiqueta recibida. valor=7426124
-[2026-03-19T17:45:07.476Z] Impresora 'Zebra' encontrada pero está offline.
-[2026-03-19T17:45:07.477Z] ERROR: impresora no disponible. nombre=Zebra
-[2026-03-19T17:45:19.454Z] Solicitud de etiqueta recibida. valor=7426124
-[2026-03-19T17:45:52.576Z] Solicitud de etiqueta recibida. valor=7426124
-[2026-03-19T17:47:07.637Z] Solicitud de etiqueta recibida. valor=7426124
-[2026-03-19T17:52:59.849Z] Solicitud de etiqueta recibida. valor=7426124
-[2026-03-19T18:54:21.911Z] Solicitud de etiqueta recibida. valor=7426124
-[2026-03-19T19:10:06.493Z] Solicitud de etiqueta recibida. valor=7426124
-[2026-03-19T19:12:38.612Z] Solicitud de etiqueta recibida. valor=7426124
-[2026-03-19T19:12:38.613Z] ERROR: imagen no encontrada. archivo=LV432820.png
-[2026-03-19T19:13:23.231Z] Solicitud de etiqueta recibida. valor=7426124
-[2026-03-19T19:26:55.018Z] Solicitud de etiqueta recibida. valor=7426124
-[2026-03-19T19:28:02.182Z] Solicitud de etiqueta recibida. valor=7426124
-[2026-03-19T19:32:59.830Z] Solicitud de etiqueta recibida. valor=7426124
-[2026-03-19T19:34:25.946Z] Solicitud de etiqueta recibida. valor=7426124
-[2026-03-19T19:35:39.679Z] Solicitud de etiqueta recibida. valor=7426124
+[2026-04-06T17:08:25.918Z] Solicitud de etiqueta recibida. valor=2226133, modelo=LV432820
+[2026-04-06T17:11:09.909Z] Solicitud de etiqueta recibida. valor=2226133, modelo=LV432820
+[2026-04-06T17:14:44.756Z] Solicitud de etiqueta recibida. valor=2226133, modelo=LV432820
+[2026-04-06T17:23:09.609Z] Solicitud de etiqueta recibida. valor=2226133, modelo=LV432820
+[2026-04-06T17:23:14.560Z] Impresora 'Zebra' encontrada pero está offline.
+[2026-04-06T17:23:14.561Z] ERROR: impresora no disponible. nombre=Zebra
+[2026-04-06T17:32:23.802Z] Solicitud de etiqueta recibida. valor=2226133, modelo=LV432820
+[2026-04-06T17:32:25.994Z] Impresora 'Zebra' encontrada pero está offline.
+[2026-04-06T17:32:25.995Z] ERROR: impresora no disponible. nombre=Zebra
+[2026-04-06T17:32:40.258Z] Solicitud de etiqueta recibida. valor=2226133, modelo=LV432820
+[2026-04-06T17:34:11.758Z] Solicitud de etiqueta recibida. valor=2226133, modelo=LV432920
+[2026-04-06T17:34:56.543Z] Solicitud de etiqueta recibida. valor=2226133, modelo=LV432920
+[2026-04-06T17:35:56.790Z] Solicitud de etiqueta recibida. valor=2226133, modelo=LV432920
+[2026-04-06T17:39:05.717Z] Solicitud de etiqueta recibida. valor=2226133, modelo=LV432920
+[2026-04-06T17:45:40.610Z] Solicitud de etiqueta recibida. valor=2226133, modelo=LV432920
+[2026-04-06T17:47:24.665Z] Solicitud de etiqueta recibida. valor=2226133, modelo=LV432920
+[2026-04-06T17:48:21.845Z] Solicitud de etiqueta recibida. valor=2226133, modelo=LV432920
+[2026-04-06T17:49:01.976Z] Solicitud de etiqueta recibida. valor=2226133, modelo=LV432820
+[2026-04-06T17:55:01.334Z] Solicitud de etiqueta recibida. valor=2226133, modelo=LV432920
+[2026-04-06T17:58:33.201Z] Solicitud de etiqueta recibida. valor=2226133, modelo=LV432920
+[2026-04-06T17:59:19.945Z] Solicitud de etiqueta recibida. valor=2226133, modelo=LV432920
+[2026-04-06T18:00:04.976Z] Solicitud de etiqueta recibida. valor=2226133, modelo=LV432920
+[2026-04-06T18:01:23.459Z] Solicitud de etiqueta recibida. valor=2226133, modelo=LV432920
+[2026-04-06T18:01:43.206Z] Solicitud de etiqueta recibida. valor=2226133, modelo=LV432920
+[2026-04-06T18:02:11.362Z] Solicitud de etiqueta recibida. valor=2226133, modelo=LV432820
+[2026-04-06T18:05:54.548Z] Solicitud de etiqueta recibida. valor=2226133, modelo=LV432820
+[2026-04-06T18:11:36.911Z] Solicitud de etiqueta recibida. valor=2226133, modelo=LV432820
+[2026-04-06T18:16:31.706Z] Solicitud de etiqueta recibida. valor=2226133, modelo=LV432820
+[2026-04-06T18:18:19.902Z] Solicitud de etiqueta recibida. valor=2226133, modelo=LV432820
+[2026-04-06T18:18:59.957Z] Solicitud de etiqueta recibida. valor=2226133, modelo=LV432820
+[2026-04-06T18:20:41.112Z] Solicitud de etiqueta recibida. valor=2226133, modelo=LV432920
+[2026-04-06T19:11:10.058Z] Solicitud de etiqueta recibida. valor=2226133, modelo=LV432820
+[2026-04-06T19:12:14.770Z] Solicitud de etiqueta recibida. valor=2226133, modelo=LV432820
+[2026-04-06T19:15:16.488Z] Solicitud de etiqueta recibida. valor=2226133, modelo=LV432820

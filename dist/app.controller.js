@@ -19,29 +19,23 @@ let AppController = class AppController {
     constructor(appService) {
         this.appService = appService;
     }
-    getHello() {
-        return this.appService.getHello();
-    }
-    async createEtiqueta(valor) {
-        console.log('Valor recibido en el controlador:', valor);
+    async createEtiqueta(valor, modelo) {
         if (!valor || typeof valor !== 'string') {
             throw new common_1.BadRequestException('El campo valor debe ser un string.');
         }
-        return await this.appService.createEtiqueta(valor);
+        if (!modelo || typeof modelo !== 'string') {
+            throw new common_1.BadRequestException('El campo modelo debe ser un string.');
+        }
+        return await this.appService.createEtiqueta(valor, modelo);
     }
 };
 exports.AppController = AppController;
 __decorate([
-    (0, common_1.Get)(),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", []),
-    __metadata("design:returntype", String)
-], AppController.prototype, "getHello", null);
-__decorate([
     (0, common_1.Post)('etiqueta'),
     __param(0, (0, common_1.Body)('valor')),
+    __param(1, (0, common_1.Body)('modelo')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String]),
+    __metadata("design:paramtypes", [String, String]),
     __metadata("design:returntype", Promise)
 ], AppController.prototype, "createEtiqueta", null);
 exports.AppController = AppController = __decorate([

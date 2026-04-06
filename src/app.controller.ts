@@ -5,23 +5,21 @@ import { AppService } from './app.service';
 export class AppController {
     constructor(private readonly appService: AppService) { }
 
-    @Get()
-    getHello(): string {
-        return this.appService.getHello();
-    }
-
     @Post('etiqueta')
-    async createEtiqueta(@Body('valor') valor: string): Promise<{
+    async createEtiqueta(@Body('valor') valor: string, @Body('modelo') modelo: string): Promise<{
         mensaje: string;
         valor: string;
         printerConnected: boolean;
         printed: boolean;
     }> {
-        console.log('Valor recibido en el controlador:', valor);
         if (!valor || typeof valor !== 'string') {
             throw new BadRequestException('El campo valor debe ser un string.');
         }
 
-        return await this.appService.createEtiqueta(valor);
+        if (!modelo || typeof modelo !== 'string') {
+            throw new BadRequestException('El campo modelo debe ser un string.');
+        }
+
+        return await this.appService.createEtiqueta(valor, modelo);
     }
 }

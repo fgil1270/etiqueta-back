@@ -1,8 +1,7 @@
 export declare class AppService {
     private readonly logger;
     private readonly logFilePath;
-    getHello(): string;
-    createEtiqueta(valor: string): Promise<{
+    createEtiqueta(valor: string, modelo: string): Promise<{
         mensaje: string;
         valor: string;
         printerConnected: boolean;
