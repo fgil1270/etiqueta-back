@@ -4,10 +4,10 @@
   "description": "",
   "main": "dist/main.js",
   "scripts": {
-    "build": "nest build",
+    "build": "node -e \"require('fs').rmSync('dist',{ recursive: true, force: true })\" && nest build",
     "start": "nest start",
     "start:dev": "nest start --watch",
-    "start:prod": "node dist/main",
+    "start:prod": "node dist/main.js",
     "test": "echo \"No tests configured yet\""
   },
   "repository": {
