@@ -64,7 +64,7 @@ let EtiquetaPTService = EtiquetaPTService_1 = class EtiquetaPTService {
                 printed: false,
             };
         }
-        const agregaImagenBuffer = await this.agregarNumeroAImagen(imagePath, 605, 100, valor);
+        const agregaImagenBuffer = await this.agregarNumeroAImagen(imagePath, 205, 100, valor, modelo);
         const dia = new Date();
         const rutaTemporal = `C://imgs/temp-schneider/${dia.getFullYear()}-${(dia.getMonth() + 1).toString().padStart(2, '0')}-${dia.getDate().toString().padStart(2, '0')}`;
         const tempDirectory = (0, path_1.resolve)(process.cwd(), rutaTemporal);
@@ -76,6 +76,12 @@ let EtiquetaPTService = EtiquetaPTService_1 = class EtiquetaPTService {
             .withMetadata({ density: LABEL_DPI })
             .png({ compressionLevel: 0 })
             .toFile(tempImagePath);
+        return {
+            mensaje: 'Etiqueta enviada a impresion correctamente',
+            valor,
+            printerConnected: true,
+            printed: true,
+        };
         await this.printImageZpl(tempImagePath);
         return {
             mensaje: 'Etiqueta enviada a impresion correctamente',
@@ -84,14 +90,24 @@ let EtiquetaPTService = EtiquetaPTService_1 = class EtiquetaPTService {
             printed: true,
         };
     }
-    async agregarNumeroAImagen(imagePath, x, y, valor) {
+    async agregarNumeroAImagen(imagePath, x, y, valor, modelo) {
         const texto = valor;
+        let codeBar = '';
+        if (modelo == 'LV432820') {
+            codeBar = '3606488042845';
+        }
+        else if (modelo == 'LV432920') {
+            codeBar = '3606488042852';
+        }
         const svgTexto = `
-              <svg width="500" height="100">
+              <svg width="510" height="400">
                   <style>
                   .numero { fill: black; font-size: 30px; font-weight: bold; font-family: sans-serif; }
                   </style>
-                  <text x="0" y="45" class="numero">${texto}</text>
+                  <text x="400" y="45" class="numero">${texto}</text>
+                  <g transform="translate(0,230)">
+                      ${this.generarEan13Svg(codeBar)}
+                  </g>
               </svg>
           `;
         return await sharp(imagePath)
@@ -103,6 +119,79 @@ let EtiquetaPTService = EtiquetaPTService_1 = class EtiquetaPTService {
             },
         ])
             .toBuffer();
+    }
+    generarEan13Svg(code) {
+        if (!code) {
+            return '';
+        }
+        const cleanCode = code.replace(/\D/g, '');
+        if (cleanCode.length !== 13) {
+            return '';
+        }
+        const structure = [
+            ['L', 'L', 'L', 'L', 'L', 'L'],
+            ['L', 'L', 'G', 'L', 'G', 'G'],
+            ['L', 'L', 'G', 'G', 'L', 'G'],
+            ['L', 'L', 'G', 'G', 'G', 'L'],
+            ['L', 'G', 'L', 'L', 'G', 'G'],
+            ['L', 'G', 'G', 'L', 'L', 'G'],
+            ['L', 'G', 'G', 'G', 'L', 'L'],
+            ['L', 'G', 'L', 'G', 'L', 'G'],
+            ['L', 'G', 'L', 'G', 'G', 'L'],
+            ['L', 'G', 'G', 'L', 'G', 'L']
+        ];
+        const L = [
+            '0001101', '0011001', '0010011', '0111101', '0100011',
+            '0110001', '0101111', '0111011', '0110111', '0001011'
+        ];
+        const G = [
+            '0100111', '0110011', '0011011', '0100001', '0011101',
+            '0111001', '0000101', '0010001', '0001001', '0010111'
+        ];
+        const R = [
+            '1110010', '1100110', '1101100', '1000010', '1011100',
+            '1001110', '1010000', '1000100', '1001000', '1110100'
+        ];
+        const firstDigit = parseInt(cleanCode[0], 10);
+        const leftParity = structure[firstDigit] || structure[0];
+        let binary = '101';
+        for (let i = 1; i <= 6; i++) {
+            const digit = parseInt(cleanCode[i], 10);
+            binary += leftParity[i - 1] === 'L' ? L[digit] : G[digit];
+        }
+        binary += '01010';
+        for (let i = 7; i <= 12; i++) {
+            const digit = parseInt(cleanCode[i], 10);
+            binary += R[digit];
+        }
+        binary += '101';
+        const moduleWidth = 2;
+        const barHeight = 45;
+        const guardHeight = 50;
+        let rects = '';
+        const barOffset = 15;
+        for (let i = 0; i < binary.length; i++) {
+            if (binary[i] === '1') {
+                const xPos = barOffset + (i * moduleWidth);
+                const isGuard = i < 3 || (i >= 45 && i < 50) || i >= 92;
+                const h = isGuard ? guardHeight : barHeight;
+                rects += `<rect x="${xPos}" y="0" width="${moduleWidth}" height="${h}" fill="black" />`;
+            }
+        }
+        const textStyle = 'fill: black; font-size: 14px; font-family: sans-serif; font-weight: bold;';
+        const firstChar = cleanCode[0];
+        const leftGroup = cleanCode.slice(1, 7);
+        const rightGroup = cleanCode.slice(7);
+        rects += `<text x="0" y="${guardHeight + 11}" style="${textStyle}">${firstChar}</text>`;
+        for (let i = 0; i < 6; i++) {
+            const x = barOffset + 6 + (i * 13);
+            rects += `<text x="${x}" y="${guardHeight + 11}" style="${textStyle}">${leftGroup[i]}</text>`;
+        }
+        for (let i = 0; i < 6; i++) {
+            const x = barOffset + 102 + (i * 13);
+            rects += `<text x="${x}" y="${guardHeight + 11}" style="${textStyle}">${rightGroup[i]}</text>`;
+        }
+        return rects;
     }
     async isUsbZebraConnected() {
         const escapedPrinterName = ZEBRA_PRINTER_NAME.replace(/'/g, "''");

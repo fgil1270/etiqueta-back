@@ -8,6 +8,7 @@ export declare class EtiquetaPTService {
         printed: boolean;
     }>;
     private agregarNumeroAImagen;
+    private generarEan13Svg;
     private isUsbZebraConnected;
     private printImage;
     private writeLog;

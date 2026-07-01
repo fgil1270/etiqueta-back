@@ -82,7 +82,7 @@ export class EtiquetaPTService {
     }
 
     //se agrega el numero a la imagen
-    const agregaImagenBuffer = await this.agregarNumeroAImagen(imagePath, 605, 100, valor);
+    const agregaImagenBuffer = await this.agregarNumeroAImagen(imagePath, 205, 100, valor, modelo);
     const dia = new Date();
     const rutaTemporal = `C://imgs/temp-schneider/${dia.getFullYear()}-${(dia.getMonth() + 1).toString().padStart(2, '0')}-${dia.getDate().toString().padStart(2, '0')}`;
     //se guarda la imagen temporalmente para imprimirla
@@ -107,6 +107,12 @@ export class EtiquetaPTService {
       .png({ compressionLevel: 0 })
       .toFile(tempImagePath);
 
+    return {
+      mensaje: 'Etiqueta enviada a impresion correctamente',
+      valor,
+      printerConnected: true,
+      printed: true,
+    };
 
     //await this.printImage(tempImagePath);
     await this.printImageZpl(tempImagePath);
@@ -119,17 +125,27 @@ export class EtiquetaPTService {
     };
   }
 
-  private async agregarNumeroAImagen(imagePath: string, x: number, y: number, valor: string): Promise<Buffer> {
+  private async agregarNumeroAImagen(imagePath: string, x: number, y: number, valor: string, modelo: string): Promise<Buffer> {
     const texto = valor;
+    let codeBar = '';
 
-    // Creamos una capa SVG con el número
+    if (modelo == 'LV432820') {
+      codeBar = '3606488042845';
+    } else if (modelo == 'LV432920') {
+      codeBar = '3606488042852';
+    }
+
+    // Creamos una capa SVG con el número y el código de barras
     // El tamaño del SVG debe ser igual o menor a la imagen original
     const svgTexto = `
-              <svg width="500" height="100">
+              <svg width="510" height="400">
                   <style>
                   .numero { fill: black; font-size: 30px; font-weight: bold; font-family: sans-serif; }
                   </style>
-                  <text x="0" y="45" class="numero">${texto}</text>
+                  <text x="400" y="45" class="numero">${texto}</text>
+                  <g transform="translate(0,230)">
+                      ${this.generarEan13Svg(codeBar)}
+                  </g>
               </svg>
           `;
 
@@ -143,6 +159,106 @@ export class EtiquetaPTService {
         },
       ])
       .toBuffer(); // Regresamos el buffer editado
+  }
+
+  private generarEan13Svg(code: string): string {
+    if (!code) {
+      return '';
+    }
+
+    const cleanCode = code.replace(/\D/g, '');
+    if (cleanCode.length !== 13) {
+      return '';
+    }
+
+    const structure = [
+      ['L', 'L', 'L', 'L', 'L', 'L'], // 0
+      ['L', 'L', 'G', 'L', 'G', 'G'], // 1
+      ['L', 'L', 'G', 'G', 'L', 'G'], // 2
+      ['L', 'L', 'G', 'G', 'G', 'L'], // 3
+      ['L', 'G', 'L', 'L', 'G', 'G'], // 4
+      ['L', 'G', 'G', 'L', 'L', 'G'], // 5
+      ['L', 'G', 'G', 'G', 'L', 'L'], // 6
+      ['L', 'G', 'L', 'G', 'L', 'G'], // 7
+      ['L', 'G', 'L', 'G', 'G', 'L'], // 8
+      ['L', 'G', 'G', 'L', 'G', 'L']  // 9
+    ];
+
+    const L = [
+      '0001101', '0011001', '0010011', '0111101', '0100011',
+      '0110001', '0101111', '0111011', '0110111', '0001011'
+    ];
+
+    const G = [
+      '0100111', '0110011', '0011011', '0100001', '0011101',
+      '0111001', '0000101', '0010001', '0001001', '0010111'
+    ];
+
+    const R = [
+      '1110010', '1100110', '1101100', '1000010', '1011100',
+      '1001110', '1010000', '1000100', '1001000', '1110100'
+    ];
+
+    const firstDigit = parseInt(cleanCode[0], 10);
+    const leftParity = structure[firstDigit] || structure[0];
+
+    let binary = '101'; // Start guard
+
+    // Left-hand group (digits 2 to 7)
+    for (let i = 1; i <= 6; i++) {
+      const digit = parseInt(cleanCode[i], 10);
+      binary += leftParity[i - 1] === 'L' ? L[digit] : G[digit];
+    }
+
+    binary += '01010'; // Center guard
+
+    // Right-hand group (digits 8 to 13)
+    for (let i = 7; i <= 12; i++) {
+      const digit = parseInt(cleanCode[i], 10);
+      binary += R[digit];
+    }
+
+    binary += '101'; // End guard
+
+    const moduleWidth = 2; // pixel width per module
+    const barHeight = 45;  // height of normal bars
+    const guardHeight = 50; // guard bars are slightly longer
+    let rects = '';
+
+    // Shift entire barcode to the right to make room for first digit
+    const barOffset = 15;
+
+    for (let i = 0; i < binary.length; i++) {
+      if (binary[i] === '1') {
+        const xPos = barOffset + (i * moduleWidth);
+        const isGuard = i < 3 || (i >= 45 && i < 50) || i >= 92;
+        const h = isGuard ? guardHeight : barHeight;
+        rects += `<rect x="${xPos}" y="0" width="${moduleWidth}" height="${h}" fill="black" />`;
+      }
+    }
+
+    const textStyle = 'fill: black; font-size: 14px; font-family: sans-serif; font-weight: bold;';
+    const firstChar = cleanCode[0];
+    const leftGroup = cleanCode.slice(1, 7);
+    const rightGroup = cleanCode.slice(7);
+
+    // EAN-13 text layout:
+    // First digit is on the far left, before the bars
+    rects += `<text x="0" y="${guardHeight + 11}" style="${textStyle}">${firstChar}</text>`;
+
+    // Left group digits spaced under left bars
+    for (let i = 0; i < 6; i++) {
+      const x = barOffset + 6 + (i * 13);
+      rects += `<text x="${x}" y="${guardHeight + 11}" style="${textStyle}">${leftGroup[i]}</text>`;
+    }
+
+    // Right group digits spaced under right bars
+    for (let i = 0; i < 6; i++) {
+      const x = barOffset + 102 + (i * 13);
+      rects += `<text x="${x}" y="${guardHeight + 11}" style="${textStyle}">${rightGroup[i]}</text>`;
+    }
+
+    return rects;
   }
 
   // Función para validar si la impresora Zebra está conectada por USB usando PowerShell
