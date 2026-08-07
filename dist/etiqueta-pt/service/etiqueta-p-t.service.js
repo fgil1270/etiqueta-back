@@ -19,7 +19,7 @@ const ZEBRA_PRINTER_NAME = process.env.ZEBRA_PRINTER_NAME ?? 'Zebra';
 const IMAGE_EXTENSIONS = ['.png', '.jpg', '.jpeg', '.bmp'];
 const LABEL_DPI = 300;
 const LABEL_WIDTH_IN = Number(process.env.LABEL_WIDTH_IN ?? 3.2);
-const LABEL_HEIGHT_IN = Number(process.env.LABEL_HEIGHT_IN ?? 1.4715);
+const LABEL_HEIGHT_IN = Number(process.env.LABEL_HEIGHT_IN ?? 1.8715);
 const LABEL_WIDTH_PX = Math.round(LABEL_WIDTH_IN * LABEL_DPI);
 const LABEL_HEIGHT_PX = Math.round(LABEL_HEIGHT_IN * LABEL_DPI);
 const LABEL_WIDTH_HI = Math.round(LABEL_WIDTH_IN * 100);
@@ -30,65 +30,109 @@ const PRINT_OFFSET_X_HI = Math.round((PRINT_OFFSET_X_MM / 25.4) * 100);
 const PRINT_OFFSET_Y_HI = Math.round((PRINT_OFFSET_Y_MM / 25.4) * 100);
 const PRINT_OFFSET_X_PX = Math.round((PRINT_OFFSET_X_MM / 25.4) * LABEL_DPI);
 const PRINT_OFFSET_Y_PX = Math.round((PRINT_OFFSET_Y_MM / 25.4) * LABEL_DPI);
-const PRINT_COPIES = Math.max(1, Number(process.env.PRINT_COPIES ?? 1));
 const ZPL_DARKNESS = Math.min(30, Math.max(0, Number(process.env.ZPL_DARKNESS ?? 15)));
 const ZPL_PRINT_SPEED = Math.min(14, Math.max(1, Number(process.env.ZPL_PRINT_SPEED ?? 3)));
 let EtiquetaPTService = EtiquetaPTService_1 = class EtiquetaPTService {
     constructor() {
         this.logger = new common_1.Logger(EtiquetaPTService_1.name);
         this.logFilePath = (0, path_1.resolve)(process.cwd(), 'logs', 'etiqueta.log');
+        this.PRINT_COPIES = Math.max(1, Number(process.env.PRINT_COPIES ?? 1));
     }
-    async createEtiqueta(valor, modelo) {
+    async createEtiqueta(valor, modelo, totalEtiquetas) {
         this.writeLog(`Solicitud de etiqueta recibida. valor=${valor}, modelo=${modelo}`);
-        const imgFilename = modelo + '.png';
-        const imgsDirectory = (0, path_1.resolve)(process.cwd(), 'C://imgs');
-        const imagePath = this.resolveImagePath(`${imgsDirectory}/${imgFilename}`);
-        if (!imagePath) {
-            this.logger.error(`No existe una imagen asociada : ${imgFilename}`);
-            this.writeLog(`ERROR: imagen no encontrada. archivo=${imgFilename}`);
+        try {
+            this.PRINT_COPIES = Math.max(1, Number(totalEtiquetas ?? 1));
+            ;
+            const imgFilename = modelo + '.png';
+            const imgsDirectory = (0, path_1.resolve)(process.cwd(), 'C://imgs');
+            const imagePath = this.resolveImagePath(`${imgsDirectory}/${imgFilename}`);
+            if (!imagePath) {
+                this.logger.error(`No existe una imagen asociada : ${imgFilename}`);
+                this.writeLog(`ERROR: imagen no encontrada. archivo=${imgFilename}`);
+                return {
+                    mensaje: 'No se pudo imprimir: no existe una imagen asociada a la etiqueta.',
+                    valor,
+                    printerConnected: false,
+                    printed: false,
+                };
+            }
+            const printerConnected = await this.isUsbZebraConnected();
+            if (!printerConnected) {
+                this.writeLog(`ERROR: impresora no disponible. nombre=${ZEBRA_PRINTER_NAME}`);
+                return {
+                    mensaje: 'Impresora Zebra no conectada por USB.',
+                    valor,
+                    printerConnected: false,
+                    printed: false,
+                };
+            }
+            const agregaImagenBuffer = await this.agregarNumeroAImagen(imagePath, 205, 80, valor, modelo);
+            const dia = new Date();
+            const rutaTemporal = `C://imgs/temp-schneider/${dia.getFullYear()}-${(dia.getMonth() + 1).toString().padStart(2, '0')}-${dia.getDate().toString().padStart(2, '0')}`;
+            const tempDirectory = (0, path_1.resolve)(process.cwd(), rutaTemporal);
+            if (!(0, fs_1.existsSync)(tempDirectory)) {
+                (0, fs_1.mkdirSync)(tempDirectory, { recursive: true });
+            }
+            const tempImagePath = (0, path_1.resolve)(tempDirectory, `etiqueta_${Date.now()}.png`);
+            await sharp(agregaImagenBuffer)
+                .withMetadata({ density: LABEL_DPI })
+                .png({ compressionLevel: 0 })
+                .toFile(tempImagePath);
+            const nowTxt = new Date();
+            const yearTxt = nowTxt.getFullYear();
+            const monthTxt = (nowTxt.getMonth() + 1).toString().padStart(2, '0');
+            const dayTxt = nowTxt.getDate().toString().padStart(2, '0');
+            const hourTxt = nowTxt.getHours().toString().padStart(2, '0');
+            const minuteTxt = nowTxt.getMinutes().toString().padStart(2, '0');
+            const secondTxt = nowTxt.getSeconds().toString().padStart(2, '0');
+            const folderPath = (0, path_1.resolve)(process.cwd(), 'documentos', yearTxt.toString());
+            if (!(0, fs_1.existsSync)(folderPath)) {
+                (0, fs_1.mkdirSync)(folderPath, { recursive: true });
+            }
+            const txtFileName = `modelo.txt`;
+            const txtFilePath = (0, path_1.resolve)(folderPath, txtFileName);
+            (0, fs_1.writeFileSync)(txtFilePath, modelo);
+            await this.printImageZpl(tempImagePath);
             return {
-                mensaje: 'No se pudo imprimir: no existe una imagen asociada a la etiqueta.',
+                mensaje: 'Etiqueta enviada a impresion correctamente',
+                valor,
+                printerConnected: true,
+                printed: true,
+            };
+        }
+        catch (error) {
+            return {
+                mensaje: error instanceof Error ? error.message : String(error),
                 valor,
                 printerConnected: false,
                 printed: false,
             };
         }
-        const printerConnected = await this.isUsbZebraConnected();
-        if (!printerConnected) {
-            this.logger.warn(`Impresora no conectada por USB: ${ZEBRA_PRINTER_NAME}`);
-            this.writeLog(`ERROR: impresora no disponible. nombre=${ZEBRA_PRINTER_NAME}`);
-            return {
-                mensaje: 'Impresora Zebra no conectada por USB.',
-                valor,
-                printerConnected: false,
-                printed: false,
-            };
+    }
+    async getUltimoModelo(year) {
+        const folderPath = (0, path_1.resolve)(process.cwd(), 'documentos', year);
+        if (!(0, fs_1.existsSync)(folderPath)) {
+            throw new Error(`La ruta del año ${year} no existe.`);
         }
-        const agregaImagenBuffer = await this.agregarNumeroAImagen(imagePath, 205, 100, valor, modelo);
-        const dia = new Date();
-        const rutaTemporal = `C://imgs/temp-schneider/${dia.getFullYear()}-${(dia.getMonth() + 1).toString().padStart(2, '0')}-${dia.getDate().toString().padStart(2, '0')}`;
-        const tempDirectory = (0, path_1.resolve)(process.cwd(), rutaTemporal);
-        if (!(0, fs_1.existsSync)(tempDirectory)) {
-            (0, fs_1.mkdirSync)(tempDirectory, { recursive: true });
+        const files = (0, fs_1.readdirSync)(folderPath);
+        if (files.length === 0) {
+            throw new Error(`No hay archivos en la ruta del año ${year}.`);
         }
-        const tempImagePath = (0, path_1.resolve)(tempDirectory, `etiqueta_${Date.now()}.png`);
-        await sharp(agregaImagenBuffer)
-            .withMetadata({ density: LABEL_DPI })
-            .png({ compressionLevel: 0 })
-            .toFile(tempImagePath);
-        return {
-            mensaje: 'Etiqueta enviada a impresion correctamente',
-            valor,
-            printerConnected: true,
-            printed: true,
-        };
-        await this.printImageZpl(tempImagePath);
-        return {
-            mensaje: 'Etiqueta enviada a impresion correctamente',
-            valor,
-            printerConnected: true,
-            printed: true,
-        };
+        let latestFile = '';
+        let latestMtime = 0;
+        for (const file of files) {
+            const filePath = (0, path_1.resolve)(folderPath, file);
+            const stats = (0, fs_1.statSync)(filePath);
+            if (stats.isFile() && stats.mtimeMs > latestMtime) {
+                latestMtime = stats.mtimeMs;
+                latestFile = file;
+            }
+        }
+        if (!latestFile) {
+            throw new Error(`No se encontró un archivo válido para el año ${year}.`);
+        }
+        const content = (0, fs_1.readFileSync)((0, path_1.resolve)(folderPath, latestFile), 'utf8');
+        return content.trim();
     }
     async agregarNumeroAImagen(imagePath, x, y, valor, modelo) {
         const texto = valor;
@@ -100,13 +144,13 @@ let EtiquetaPTService = EtiquetaPTService_1 = class EtiquetaPTService {
             codeBar = '3606488042852';
         }
         const svgTexto = `
-              <svg width="510" height="400">
+              <svg width="510" height="410">
                   <style>
                   .numero { fill: black; font-size: 30px; font-weight: bold; font-family: sans-serif; }
                   </style>
-                  <text x="400" y="45" class="numero">${texto}</text>
-                  <g transform="translate(0,230)">
-                      ${this.generarEan13Svg(codeBar)}
+                  <text x="400" y="65" class="numero">${texto}</text>
+                  <g transform="translate(0,245)" >
+                    ${this.generarEan13Svg(codeBar)}
                   </g>
               </svg>
           `;
@@ -165,9 +209,9 @@ let EtiquetaPTService = EtiquetaPTService_1 = class EtiquetaPTService {
             binary += R[digit];
         }
         binary += '101';
-        const moduleWidth = 2;
-        const barHeight = 45;
-        const guardHeight = 50;
+        const moduleWidth = 2.3;
+        const barHeight = 80;
+        const guardHeight = 80;
         let rects = '';
         const barOffset = 15;
         for (let i = 0; i < binary.length; i++) {
@@ -178,18 +222,18 @@ let EtiquetaPTService = EtiquetaPTService_1 = class EtiquetaPTService {
                 rects += `<rect x="${xPos}" y="0" width="${moduleWidth}" height="${h}" fill="black" />`;
             }
         }
-        const textStyle = 'fill: black; font-size: 14px; font-family: sans-serif; font-weight: bold;';
+        const textStyle = 'fill: black; font-size: 21px; font-family: sans-serif; font-weight: bold; text-anchor: middle;';
         const firstChar = cleanCode[0];
         const leftGroup = cleanCode.slice(1, 7);
         const rightGroup = cleanCode.slice(7);
-        rects += `<text x="0" y="${guardHeight + 11}" style="${textStyle}">${firstChar}</text>`;
+        rects += `<text x="4" y="${guardHeight + 17}" style="fill: black; font-size: 21px; font-family: sans-serif; font-weight: bold;">${firstChar}</text>`;
         for (let i = 0; i < 6; i++) {
-            const x = barOffset + 6 + (i * 13);
-            rects += `<text x="${x}" y="${guardHeight + 11}" style="${textStyle}">${leftGroup[i]}</text>`;
+            const x = barOffset + (7 * i + 6.5) * moduleWidth;
+            rects += `<text x="${x}" y="${guardHeight + 17}" style="${textStyle}">${leftGroup[i]}</text>`;
         }
         for (let i = 0; i < 6; i++) {
-            const x = barOffset + 102 + (i * 13);
-            rects += `<text x="${x}" y="${guardHeight + 11}" style="${textStyle}">${rightGroup[i]}</text>`;
+            const x = barOffset + (7 * i + 53.5) * moduleWidth;
+            rects += `<text x="${x}" y="${guardHeight + 17}" style="${textStyle}">${rightGroup[i]}</text>`;
         }
         return rects;
     }
@@ -320,7 +364,7 @@ let EtiquetaPTService = EtiquetaPTService_1 = class EtiquetaPTService {
                 gfData += byte.toString(16).padStart(2, '0').toUpperCase();
             }
         }
-        const zpl = `^XA^PW${labelWidthDots}^LL${labelHeightDots}^FO${PRINT_OFFSET_X_PX},${PRINT_OFFSET_Y_PX}^GFA,${totalBytes},${totalBytes},${bytesPerRow},${gfData}^FS^PQ${PRINT_COPIES}^XZ`;
+        const zpl = `^XA^PW${labelWidthDots}^LL${labelHeightDots}^FO${PRINT_OFFSET_X_PX},${PRINT_OFFSET_Y_PX}^GFA,${totalBytes},${totalBytes},${bytesPerRow},${gfData}^FS^PQ${this.PRINT_COPIES}^XZ`;
         const zplPath = imagePath.replace(/\.png$/i, '.zpl');
         (0, fs_1.writeFileSync)(zplPath, zpl, 'ascii');
         const escapedPrinterName = ZEBRA_PRINTER_NAME.replace(/'/g, "''");

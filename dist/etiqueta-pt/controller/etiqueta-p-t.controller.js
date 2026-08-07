@@ -19,14 +19,28 @@ let EtiquetaPTController = class EtiquetaPTController {
     constructor(etiquetaPTService) {
         this.etiquetaPTService = etiquetaPTService;
     }
-    async createEtiqueta(valor, modelo) {
+    async createEtiqueta(valor, modelo, totalEtiqueta) {
         if (!valor || typeof valor !== 'string') {
             throw new common_1.BadRequestException('El campo valor debe ser un string.');
         }
-        if (!modelo || typeof modelo !== 'string') {
+        if (modelo == null || modelo === '' || modelo === undefined || typeof modelo !== 'string') {
             throw new common_1.BadRequestException('El campo modelo debe ser un string.');
         }
-        return await this.etiquetaPTService.createEtiqueta(valor, modelo);
+        if (!totalEtiqueta || typeof totalEtiqueta !== 'number') {
+            throw new common_1.BadRequestException('El campo totalEtiquetas debe ser un número.');
+        }
+        return await this.etiquetaPTService.createEtiqueta(valor, modelo, totalEtiqueta);
+    }
+    async getUltimoModelo() {
+        const year = new Date().getFullYear().toString();
+        try {
+            const modelo = await this.etiquetaPTService.getUltimoModelo(year);
+            return { modelo };
+        }
+        catch (errorDetails) {
+            const message = errorDetails instanceof Error ? errorDetails.message : String(errorDetails);
+            throw new common_1.BadRequestException(message);
+        }
     }
 };
 exports.EtiquetaPTController = EtiquetaPTController;
@@ -34,10 +48,17 @@ __decorate([
     (0, common_1.Post)(),
     __param(0, (0, common_1.Body)('valor')),
     __param(1, (0, common_1.Body)('modelo')),
+    __param(2, (0, common_1.Body)('totalEtiqueta')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, String]),
+    __metadata("design:paramtypes", [String, String, Number]),
     __metadata("design:returntype", Promise)
 ], EtiquetaPTController.prototype, "createEtiqueta", null);
+__decorate([
+    (0, common_1.Get)('modelo'),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", Promise)
+], EtiquetaPTController.prototype, "getUltimoModelo", null);
 exports.EtiquetaPTController = EtiquetaPTController = __decorate([
     (0, common_1.Controller)('etiqueta/pt'),
     __metadata("design:paramtypes", [etiqueta_p_t_service_1.EtiquetaPTService])

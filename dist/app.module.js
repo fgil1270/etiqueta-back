@@ -11,14 +11,22 @@ const reimpresion_trazabilidad_module_1 = require("./reimpresion-trazabilidad/re
 const etiqueta_trazabilidad_module_1 = require("./etiqueta-trazabilidad/etiqueta-trazabilidad.module");
 const etiqueta_p_t_module_1 = require("./etiqueta-pt/etiqueta-p-t.module");
 const common_1 = require("@nestjs/common");
+const config_1 = require("@nestjs/config");
 const app_controller_1 = require("./app.controller");
 const app_service_1 = require("./app.service");
+const database_module_1 = require("./database/database.module");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
 exports.AppModule = AppModule = __decorate([
     (0, common_1.Module)({
-        imports: [reimpresion_trazabilidad_module_1.ReimpresionTrazabilidadModule, etiqueta_trazabilidad_module_1.EtiquetaTrazabilidadModule, etiqueta_p_t_module_1.EtiquetaPTModule,],
+        imports: [
+            config_1.ConfigModule.forRoot({ isGlobal: true }),
+            database_module_1.DatabaseModule,
+            reimpresion_trazabilidad_module_1.ReimpresionTrazabilidadModule,
+            etiqueta_trazabilidad_module_1.EtiquetaTrazabilidadModule,
+            etiqueta_p_t_module_1.EtiquetaPTModule,
+        ],
         controllers: [app_controller_1.AppController],
         providers: [app_service_1.AppService],
     })

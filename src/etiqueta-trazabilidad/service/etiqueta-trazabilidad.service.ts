@@ -51,9 +51,7 @@ export class EtiquetaTrazabilidadService {
     const printerConnected = await this.isUsbZebraConnected();
 
     if (!printerConnected) {
-      this.logger.warn(
-        `Impresora no conectada por USB: ${ZEBRA_PRINTER_NAME}`,
-      );
+      //this.logger.warn(`Impresora no conectada por USB: ${ZEBRA_PRINTER_NAME}`);
       this.writeLog(`ERROR: impresora no disponible. nombre=${ZEBRA_PRINTER_NAME}`);
 
       return {
@@ -152,9 +150,7 @@ export class EtiquetaTrazabilidadService {
     const printerConnected = await this.isUsbZebraConnected();
 
     if (!printerConnected) {
-      this.logger.warn(
-        `Impresora no conectada por USB: ${ZEBRA_PRINTER_NAME}`,
-      );
+      //this.logger.warn(`Impresora no conectada por USB: ${ZEBRA_PRINTER_NAME}`);
       this.writeLog(`ERROR: impresora no disponible. nombre=${ZEBRA_PRINTER_NAME}`);
 
       return {

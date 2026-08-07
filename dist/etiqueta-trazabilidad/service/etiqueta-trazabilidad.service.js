@@ -44,7 +44,6 @@ let EtiquetaTrazabilidadService = EtiquetaTrazabilidadService_1 = class Etiqueta
         const imgsDirectory = (0, path_1.resolve)(process.cwd(), 'C://imgs');
         const printerConnected = await this.isUsbZebraConnected();
         if (!printerConnected) {
-            this.logger.warn(`Impresora no conectada por USB: ${ZEBRA_PRINTER_NAME}`);
             this.writeLog(`ERROR: impresora no disponible. nombre=${ZEBRA_PRINTER_NAME}`);
             return {
                 mensaje: 'Impresora Zebra no conectada por USB.',
@@ -115,7 +114,6 @@ let EtiquetaTrazabilidadService = EtiquetaTrazabilidadService_1 = class Etiqueta
         this.writeLog(`Enviando número directamente a impresora. numero=${numero}`);
         const printerConnected = await this.isUsbZebraConnected();
         if (!printerConnected) {
-            this.logger.warn(`Impresora no conectada por USB: ${ZEBRA_PRINTER_NAME}`);
             this.writeLog(`ERROR: impresora no disponible. nombre=${ZEBRA_PRINTER_NAME}`);
             return {
                 mensaje: 'Impresora Zebra no conectada por USB.',

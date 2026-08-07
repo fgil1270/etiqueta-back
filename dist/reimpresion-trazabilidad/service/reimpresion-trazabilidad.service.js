@@ -41,7 +41,6 @@ let ReimpresionTrazabilidadService = ReimpresionTrazabilidadService_1 = class Re
         REQUIRED_HUMAN_TEXT = body.code + ' C';
         const printerConnected = await this.isUsbZebraConnected();
         if (!printerConnected) {
-            this.logger.warn(`Impresora no conectada por USB: ${ZEBRA_PRINTER_NAME}`);
             return {
                 mensaje: 'Impresora Zebra no conectada por USB.',
                 printerConnected: false,

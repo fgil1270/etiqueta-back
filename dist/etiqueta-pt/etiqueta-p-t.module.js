@@ -10,12 +10,14 @@ exports.EtiquetaPTModule = void 0;
 const etiqueta_p_t_service_1 = require("./service/etiqueta-p-t.service");
 const etiqueta_p_t_controller_1 = require("./controller/etiqueta-p-t.controller");
 const common_1 = require("@nestjs/common");
+const typeorm_1 = require("@nestjs/typeorm");
+const etiqueta_producto_terminado_entity_1 = require("../entities/etiqueta-producto-terminado.entity");
 let EtiquetaPTModule = class EtiquetaPTModule {
 };
 exports.EtiquetaPTModule = EtiquetaPTModule;
 exports.EtiquetaPTModule = EtiquetaPTModule = __decorate([
     (0, common_1.Module)({
-        imports: [],
+        imports: [typeorm_1.TypeOrmModule.forFeature([etiqueta_producto_terminado_entity_1.EtiquetaProductoTerminado])],
         controllers: [etiqueta_p_t_controller_1.EtiquetaPTController,],
         providers: [etiqueta_p_t_service_1.EtiquetaPTService,],
         exports: []

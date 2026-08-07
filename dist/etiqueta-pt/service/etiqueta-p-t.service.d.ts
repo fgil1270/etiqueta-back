@@ -1,12 +1,14 @@
 export declare class EtiquetaPTService {
     private readonly logger;
     private readonly logFilePath;
-    createEtiqueta(valor: string, modelo: string): Promise<{
+    private PRINT_COPIES;
+    createEtiqueta(valor: string, modelo: string, totalEtiquetas: number): Promise<{
         mensaje: string;
         valor: string;
         printerConnected: boolean;
         printed: boolean;
     }>;
+    getUltimoModelo(year: string): Promise<string>;
     private agregarNumeroAImagen;
     private generarEan13Svg;
     private isUsbZebraConnected;
