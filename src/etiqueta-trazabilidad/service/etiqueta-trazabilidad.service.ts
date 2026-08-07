@@ -5,6 +5,10 @@ import { execFile } from 'child_process';
 import { promisify } from 'util';
 import sharp = require('sharp');
 import * as path from 'path';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+
+import { EtiquetaTrazabilidad } from '../../entities/etiqueta-trazabilidad.entity';
 
 const execFileAsync = promisify(execFile);
 const ZEBRA_PRINTER_NAME =
@@ -35,6 +39,10 @@ const ZPL_PRINT_SPEED = Math.min(14, Math.max(1, Number(process.env.ZPL_PRINT_SP
 export class EtiquetaTrazabilidadService {
   private readonly logger = new Logger(EtiquetaTrazabilidadService.name);
   private readonly logFilePath = resolve(process.cwd(), 'logs', 'etiqueta.log');
+
+  constructor(
+    @InjectRepository(EtiquetaTrazabilidad) private readonly etiquetaTrazabilidadRepository: Repository<EtiquetaTrazabilidad>
+  ) { }
 
   async createEtiquetaTrazabilidad(valor: string, modelo: string): Promise<{
     mensaje: string;
@@ -71,6 +79,12 @@ export class EtiquetaTrazabilidadService {
 
     await this.printNumberDirectly(valor);
     //await this.printValueAsPng(valor);
+
+    //se guarda el registro en la base de datos
+    const etiqueta = new EtiquetaTrazabilidad();
+    etiqueta.codigo = valor;
+    etiqueta.modelo = modelo;
+    await this.etiquetaTrazabilidadRepository.save(etiqueta);
 
     return {
       mensaje: 'Etiqueta enviada a impresion correctamente',
