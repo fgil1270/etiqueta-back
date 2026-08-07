@@ -143,3 +143,5 @@
 [2026-07-09T16:20:53.706Z] ERROR: impresora no disponible. nombre=Zebra
 [2026-07-09T19:40:44.178Z] Solicitud de etiqueta recibida. valor=2226284, modelo=
 [2026-07-09T19:40:44.180Z] ERROR: imagen no encontrada. archivo=.png
+[2026-08-07T21:22:20.447Z] Solicitud de etiqueta recibida. valor=2226325, modelo=LV432820
+[2026-08-07T21:22:50.100Z] Solicitud de etiqueta recibida. valor=2226325, modelo=LV432920

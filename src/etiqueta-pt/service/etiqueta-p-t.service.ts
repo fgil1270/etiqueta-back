@@ -138,8 +138,25 @@ export class EtiquetaPTService {
       //await this.printImage(tempImagePath);
 
       //manda imprimir la imagen en formato ZPL nativo (sin GDI+, más rápido)
+      const printed = await this.printImageZpl(tempImagePath);
 
-      await this.printImageZpl(tempImagePath);
+      if (!printed) {
+        this.writeLog(`ERROR: la impresora no confirmó la finalización del trabajo de impresion.`);
+        return {
+          mensaje: 'La etiqueta se envió a la impresora pero no se confirmó que se haya impreso (revisar papel/cinta/estado de la impresora).',
+          valor,
+          printerConnected: true,
+          printed: false,
+        };
+      }
+
+      //se guarda la etiqueta en la base de datos
+      //se crea la cantidad de registros de acuerdo al total de etiquetas a imprimir totalEtiquetas
+      const etiquetas = Array.from({ length: totalEtiquetas }, () => ({
+        codigo: valor,
+        modelo,
+      }));
+      await this.etiquetaProductoTerminadoRepository.insert(etiquetas);
 
       return {
         mensaje: 'Etiqueta enviada a impresion correctamente',
@@ -449,7 +466,8 @@ export class EtiquetaPTService {
   }
 
   // Función para enviar la imagen a la impresora Zebra en formato ZPL nativo (sin GDI+, más rápido)
-  private async printImageZpl(imagePath: string): Promise<void> {
+  // Devuelve true solo si el trabajo se completó en la cola de impresión (no solo si se envió al spooler)
+  private async printImageZpl(imagePath: string): Promise<boolean> {
     const labelWidthDots = LABEL_WIDTH_PX;
     const labelHeightDots = LABEL_HEIGHT_PX;
 
@@ -504,27 +522,49 @@ export class EtiquetaPTService {
       `$ptr=[System.Runtime.InteropServices.Marshal]::AllocHGlobal($bytes.Length)`,
       `[System.Runtime.InteropServices.Marshal]::Copy($bytes,0,$ptr,$bytes.Length)`,
       `$di=New-Object RawPrinter+DOCINFOW;$di.pDocName='ZPL';$di.pDataType='RAW'`,
-      `[RawPrinter]::StartDocPrinter($h,1,[ref]$di) | Out-Null`,
+      `$jobId=[RawPrinter]::StartDocPrinter($h,1,[ref]$di)`,
       `[RawPrinter]::StartPagePrinter($h) | Out-Null`,
       `$w=0;[RawPrinter]::WritePrinter($h,$ptr,$bytes.Length,[ref]$w) | Out-Null`,
       `[RawPrinter]::EndPagePrinter($h) | Out-Null`,
       `[RawPrinter]::EndDocPrinter($h) | Out-Null`,
       `[RawPrinter]::ClosePrinter($h) | Out-Null`,
       `[System.Runtime.InteropServices.Marshal]::FreeHGlobal($ptr)`,
+      // Verificar en la cola de impresión que el trabajo realmente terminó (no solo que se envió al spooler)
+      `$finalStatus='UNKNOWN'`,
+      `if ($jobId -le 0) { $finalStatus='ERROR:NoJobId' } else {`,
+      `  $elapsedMs=0; $timeoutMs=15000`,
+      `  while ($elapsedMs -lt $timeoutMs) {`,
+      `    Start-Sleep -Milliseconds 300; $elapsedMs+=300`,
+      `    $job = Get-PrintJob -PrinterName '${escapedPrinterName}' -ID $jobId -ErrorAction SilentlyContinue`,
+      `    if ($null -eq $job) { $finalStatus='COMPLETED'; break }`,
+      `    if ($job.JobStatus -match 'Error|Offline|PaperOut|UserIntervention|Blocked|Deleted') { $finalStatus="ERROR:$($job.JobStatus)"; break }`,
+      `  }`,
+      `  if ($finalStatus -eq 'UNKNOWN') { $finalStatus='ERROR:Timeout' }`,
+      `}`,
+      `Write-Output "JOBSTATUS=$finalStatus"`,
     ].join('; ');
 
 
     try {
-      await execFileAsync('powershell.exe', [
+      const { stdout } = await execFileAsync('powershell.exe', [
         '-NoProfile',
         '-NonInteractive',
         '-Command',
         rawPrintScript,
       ]);
 
+      const statusLine = stdout
+        .split(/\r?\n/)
+        .map((line) => line.trim())
+        .find((line) => line.startsWith('JOBSTATUS='));
+      const jobStatus = statusLine?.replace('JOBSTATUS=', '') ?? 'ERROR:NoStatus';
+
+      this.writeLog(`Estado del trabajo de impresion ZPL: ${jobStatus}`);
+
       //eliminar el archivo ZPL temporal después de imprimir
       //eliminar el archivo de imagen temporal después de imprimir
 
+      return jobStatus === 'COMPLETED';
     } catch (error) {
       this.writeLog(`ERROR enviando ZPL a impresion: ${String(error)}`);
       throw error;

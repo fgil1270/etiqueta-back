@@ -102,7 +102,21 @@ let EtiquetaPTService = EtiquetaPTService_1 = class EtiquetaPTService {
             const txtFileName = `modelo.txt`;
             const txtFilePath = (0, path_1.resolve)(folderPath, txtFileName);
             (0, fs_1.writeFileSync)(txtFilePath, modelo);
-            await this.printImageZpl(tempImagePath);
+            const printed = await this.printImageZpl(tempImagePath);
+            if (!printed) {
+                this.writeLog(`ERROR: la impresora no confirmó la finalización del trabajo de impresion.`);
+                return {
+                    mensaje: 'La etiqueta se envió a la impresora pero no se confirmó que se haya impreso (revisar papel/cinta/estado de la impresora).',
+                    valor,
+                    printerConnected: true,
+                    printed: false,
+                };
+            }
+            const etiquetas = Array.from({ length: totalEtiquetas }, () => ({
+                codigo: valor,
+                modelo,
+            }));
+            await this.etiquetaProductoTerminadoRepository.insert(etiquetas);
             return {
                 mensaje: 'Etiqueta enviada a impresion correctamente',
                 valor,
@@ -387,21 +401,40 @@ let EtiquetaPTService = EtiquetaPTService_1 = class EtiquetaPTService {
             `$ptr=[System.Runtime.InteropServices.Marshal]::AllocHGlobal($bytes.Length)`,
             `[System.Runtime.InteropServices.Marshal]::Copy($bytes,0,$ptr,$bytes.Length)`,
             `$di=New-Object RawPrinter+DOCINFOW;$di.pDocName='ZPL';$di.pDataType='RAW'`,
-            `[RawPrinter]::StartDocPrinter($h,1,[ref]$di) | Out-Null`,
+            `$jobId=[RawPrinter]::StartDocPrinter($h,1,[ref]$di)`,
             `[RawPrinter]::StartPagePrinter($h) | Out-Null`,
             `$w=0;[RawPrinter]::WritePrinter($h,$ptr,$bytes.Length,[ref]$w) | Out-Null`,
             `[RawPrinter]::EndPagePrinter($h) | Out-Null`,
             `[RawPrinter]::EndDocPrinter($h) | Out-Null`,
             `[RawPrinter]::ClosePrinter($h) | Out-Null`,
             `[System.Runtime.InteropServices.Marshal]::FreeHGlobal($ptr)`,
+            `$finalStatus='UNKNOWN'`,
+            `if ($jobId -le 0) { $finalStatus='ERROR:NoJobId' } else {`,
+            `  $elapsedMs=0; $timeoutMs=15000`,
+            `  while ($elapsedMs -lt $timeoutMs) {`,
+            `    Start-Sleep -Milliseconds 300; $elapsedMs+=300`,
+            `    $job = Get-PrintJob -PrinterName '${escapedPrinterName}' -ID $jobId -ErrorAction SilentlyContinue`,
+            `    if ($null -eq $job) { $finalStatus='COMPLETED'; break }`,
+            `    if ($job.JobStatus -match 'Error|Offline|PaperOut|UserIntervention|Blocked|Deleted') { $finalStatus="ERROR:$($job.JobStatus)"; break }`,
+            `  }`,
+            `  if ($finalStatus -eq 'UNKNOWN') { $finalStatus='ERROR:Timeout' }`,
+            `}`,
+            `Write-Output "JOBSTATUS=$finalStatus"`,
         ].join('; ');
         try {
-            await execFileAsync('powershell.exe', [
+            const { stdout } = await execFileAsync('powershell.exe', [
                 '-NoProfile',
                 '-NonInteractive',
                 '-Command',
                 rawPrintScript,
             ]);
+            const statusLine = stdout
+                .split(/\r?\n/)
+                .map((line) => line.trim())
+                .find((line) => line.startsWith('JOBSTATUS='));
+            const jobStatus = statusLine?.replace('JOBSTATUS=', '') ?? 'ERROR:NoStatus';
+            this.writeLog(`Estado del trabajo de impresion ZPL: ${jobStatus}`);
+            return jobStatus === 'COMPLETED';
         }
         catch (error) {
             this.writeLog(`ERROR enviando ZPL a impresion: ${String(error)}`);
