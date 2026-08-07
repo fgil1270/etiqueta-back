@@ -1,7 +1,11 @@
+import { EtiquetaProductoTerminado } from '../../entities/etiqueta-producto-terminado.entity';
+import { Repository } from 'typeorm';
 export declare class EtiquetaPTService {
+    private readonly etiquetaProductoTerminadoRepository;
     private readonly logger;
     private readonly logFilePath;
     private PRINT_COPIES;
+    constructor(etiquetaProductoTerminadoRepository: Repository<EtiquetaProductoTerminado>);
     createEtiqueta(valor: string, modelo: string, totalEtiquetas: number): Promise<{
         mensaje: string;
         valor: string;

@@ -5,6 +5,12 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
     else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
     return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+var __param = (this && this.__param) || function (paramIndex, decorator) {
+    return function (target, key) { decorator(target, key, paramIndex); }
+};
 var EtiquetaPTService_1;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.EtiquetaPTService = void 0;
@@ -14,6 +20,9 @@ const path_1 = require("path");
 const child_process_1 = require("child_process");
 const util_1 = require("util");
 const sharp = require("sharp");
+const etiqueta_producto_terminado_entity_1 = require("../../entities/etiqueta-producto-terminado.entity");
+const typeorm_1 = require("@nestjs/typeorm");
+const typeorm_2 = require("typeorm");
 const execFileAsync = (0, util_1.promisify)(child_process_1.execFile);
 const ZEBRA_PRINTER_NAME = process.env.ZEBRA_PRINTER_NAME ?? 'Zebra';
 const IMAGE_EXTENSIONS = ['.png', '.jpg', '.jpeg', '.bmp'];
@@ -33,7 +42,8 @@ const PRINT_OFFSET_Y_PX = Math.round((PRINT_OFFSET_Y_MM / 25.4) * LABEL_DPI);
 const ZPL_DARKNESS = Math.min(30, Math.max(0, Number(process.env.ZPL_DARKNESS ?? 15)));
 const ZPL_PRINT_SPEED = Math.min(14, Math.max(1, Number(process.env.ZPL_PRINT_SPEED ?? 3)));
 let EtiquetaPTService = EtiquetaPTService_1 = class EtiquetaPTService {
-    constructor() {
+    constructor(etiquetaProductoTerminadoRepository) {
+        this.etiquetaProductoTerminadoRepository = etiquetaProductoTerminadoRepository;
         this.logger = new common_1.Logger(EtiquetaPTService_1.name);
         this.logFilePath = (0, path_1.resolve)(process.cwd(), 'logs', 'etiqueta.log');
         this.PRINT_COPIES = Math.max(1, Number(process.env.PRINT_COPIES ?? 1));
@@ -409,6 +419,8 @@ let EtiquetaPTService = EtiquetaPTService_1 = class EtiquetaPTService {
 };
 exports.EtiquetaPTService = EtiquetaPTService;
 exports.EtiquetaPTService = EtiquetaPTService = EtiquetaPTService_1 = __decorate([
-    (0, common_1.Injectable)()
+    (0, common_1.Injectable)(),
+    __param(0, (0, typeorm_1.InjectRepository)(etiqueta_producto_terminado_entity_1.EtiquetaProductoTerminado)),
+    __metadata("design:paramtypes", [typeorm_2.Repository])
 ], EtiquetaPTService);
 //# sourceMappingURL=etiqueta-p-t.service.js.map

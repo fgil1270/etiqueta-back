@@ -6,6 +6,10 @@ import { promisify } from 'util';
 import sharp = require('sharp');
 import * as path from 'path';
 
+import { EtiquetaProductoTerminado } from '../../entities/etiqueta-producto-terminado.entity';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+
 const execFileAsync = promisify(execFile);
 const ZEBRA_PRINTER_NAME =
   process.env.ZEBRA_PRINTER_NAME ?? 'Zebra';//'Zebra TT Printer ZT610';
@@ -37,6 +41,10 @@ export class EtiquetaPTService {
   private readonly logger = new Logger(EtiquetaPTService.name);
   private readonly logFilePath = resolve(process.cwd(), 'logs', 'etiqueta.log');
   private PRINT_COPIES: number = Math.max(1, Number(process.env.PRINT_COPIES ?? 1)); // Variable para almacenar el número de copias a imprimir
+
+  constructor(
+    @InjectRepository(EtiquetaProductoTerminado) private readonly etiquetaProductoTerminadoRepository: Repository<EtiquetaProductoTerminado>,
+  ) { }
 
   async createEtiqueta(valor: string, modelo: string, totalEtiquetas: number): Promise<{
     mensaje: string;
