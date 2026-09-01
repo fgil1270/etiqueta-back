@@ -5,6 +5,10 @@ import { execFile } from 'child_process';
 import { promisify } from 'util';
 import sharp = require('sharp');
 import * as path from 'path';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+
+import { EtiquetaTrazabilidad } from '../../entities/etiqueta-trazabilidad.entity';
 
 const execFileAsync = promisify(execFile);
 const ZEBRA_PRINTER_NAME =
@@ -36,6 +40,10 @@ export class EtiquetaTrazabilidadService {
   private readonly logger = new Logger(EtiquetaTrazabilidadService.name);
   private readonly logFilePath = resolve(process.cwd(), 'logs', 'etiqueta.log');
 
+  constructor(
+    @InjectRepository(EtiquetaTrazabilidad) private readonly etiquetaTrazabilidadRepository: Repository<EtiquetaTrazabilidad>
+  ) { }
+
   async createEtiquetaTrazabilidad(valor: string, modelo: string): Promise<{
     mensaje: string;
     valor: string;
@@ -51,9 +59,7 @@ export class EtiquetaTrazabilidadService {
     const printerConnected = await this.isUsbZebraConnected();
 
     if (!printerConnected) {
-      this.logger.warn(
-        `Impresora no conectada por USB: ${ZEBRA_PRINTER_NAME}`,
-      );
+      //this.logger.warn(`Impresora no conectada por USB: ${ZEBRA_PRINTER_NAME}`);
       this.writeLog(`ERROR: impresora no disponible. nombre=${ZEBRA_PRINTER_NAME}`);
 
       return {
@@ -73,6 +79,12 @@ export class EtiquetaTrazabilidadService {
 
     await this.printNumberDirectly(valor);
     //await this.printValueAsPng(valor);
+
+    //se guarda el registro en la base de datos
+    const etiqueta = new EtiquetaTrazabilidad();
+    etiqueta.codigo = valor;
+    etiqueta.modelo = modelo;
+    await this.etiquetaTrazabilidadRepository.save(etiqueta);
 
     return {
       mensaje: 'Etiqueta enviada a impresion correctamente',
@@ -152,9 +164,7 @@ export class EtiquetaTrazabilidadService {
     const printerConnected = await this.isUsbZebraConnected();
 
     if (!printerConnected) {
-      this.logger.warn(
-        `Impresora no conectada por USB: ${ZEBRA_PRINTER_NAME}`,
-      );
+      //this.logger.warn(`Impresora no conectada por USB: ${ZEBRA_PRINTER_NAME}`);
       this.writeLog(`ERROR: impresora no disponible. nombre=${ZEBRA_PRINTER_NAME}`);
 
       return {
